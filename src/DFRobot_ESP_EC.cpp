@@ -2,7 +2,7 @@
  * file DFRobot_ESP_EC.cpp * @ https://github.com/GreenPonik/DFRobot_ESP_EC_BY_GREENPONIK
  *
  * Arduino library for Gravity: Analog EC Sensor / Meter Kit V2, SKU: DFR0300
- * 
+ *
  * Based on the @ https://github.com/DFRobot/DFRobot_EC
  * Copyright   [DFRobot](http://www.dfrobot.com), 2018
  * Copyright   GNU Lesser General Public License
@@ -13,7 +13,7 @@
  * ############# ONLY ESP COMPATIBLE ################
  * ##################################################
  * ##################################################
- * 
+ *
  * version  V1.1.2
  * date  2019-06
  */
@@ -43,8 +43,8 @@ DFRobot_ESP_EC::~DFRobot_ESP_EC()
 void DFRobot_ESP_EC::begin(int EepromStartAddress)
 {
     this->_eepromStartAddress = EepromStartAddress;
-    //check if calibration values (kvalueLow and kvalueHigh) are stored in eeprom
-    this->_kvalueLow = EEPROM.readFloat(this->_eepromStartAddress); //read the calibrated K value from EEPROM
+    // check if calibration values (kvalueLow and kvalueHigh) are stored in eeprom
+    this->_kvalueLow = EEPROM.readFloat(this->_eepromStartAddress); // read the calibrated K value from EEPROM
     if (this->_kvalueLow == float() || isnan(this->_kvalueLow) || isinf(this->_kvalueLow))
     {
         this->_kvalueLow = 1.0; // For new EEPROM, write default value( K = 1.0) to EEPROM
@@ -52,7 +52,7 @@ void DFRobot_ESP_EC::begin(int EepromStartAddress)
         EEPROM.commit();
     }
 
-    this->_kvalueHigh = EEPROM.readFloat(this->_eepromStartAddress + (int)sizeof(float)); //read the calibrated K value from EEPROM
+    this->_kvalueHigh = EEPROM.readFloat(this->_eepromStartAddress + (int)sizeof(float)); // read the calibrated K value from EEPROM
     if (this->_kvalueHigh == float() || isnan(this->_kvalueHigh) || isinf(this->_kvalueHigh))
     {
         this->_kvalueHigh = 1.0; // For new EEPROM, write default value( K = 1.0) to EEPROM
@@ -69,8 +69,8 @@ float DFRobot_ESP_EC::readEC(float voltage, float temperature)
     Serial.print(F(">>>rawEC: "));
     Serial.print(this->_rawEC, 4);
     valueTemp = this->_rawEC * this->_kvalue;
-    //automatic shift process
-    //First Range:(0,2); Second Range:(2,20)
+    // automatic shift process
+    // First Range:(0,2); Second Range:(2,20)
     if (valueTemp > 2.5)
     {
         this->_kvalue = this->_kvalueHigh;
@@ -80,9 +80,9 @@ float DFRobot_ESP_EC::readEC(float voltage, float temperature)
         this->_kvalue = this->_kvalueLow;
     }
 
-    value = this->_rawEC * this->_kvalue;                  //calculate the EC value after automatic shift
-    value = value / (1.0 + 0.0185 * (temperature - 25.0)); //temperature compensation
-    this->_ecvalue = value;                                //store the EC value for Serial CMD calibration
+    value = this->_rawEC * this->_kvalue;                  // calculate the EC value after automatic shift
+    value = value / (1.0 + 0.0185 * (temperature - 25.0)); // temperature compensation
+    this->_ecvalue = value;                                // store the EC value for Serial CMD calibration
     Serial.print(F(", ecValue: "));
     Serial.print(this->_ecvalue, 4);
     Serial.println(F("<<<"));
@@ -190,30 +190,23 @@ void DFRobot_ESP_EC::ecCalibration(byte mode)
         {
             if ((this->_rawEC > RAWEC_1413_LOW) && (this->_rawEC < RAWEC_1413_HIGH))
             {
-                Serial.print(F(">>>Buffer 1.413ms/cm<<<"));                            //recognize 1.413us/cm buffer solution
-                compECsolution = 1.413 * (1.0 + 0.0185 * (this->_temperature - 25.0)); //temperature compensation
-                Serial.print(F(">>>compECsolution: "));
-                Serial.print(compECsolution);
-                Serial.println(F("<<<"));
-            }
-            else if ((this->_rawEC > RAWEC_276_LOW) && (this->_rawEC < RAWEC_276_HIGH))
-            {
-                Serial.print(F(">>>Buffer 2.76ms/cm<<<"));                            //recognize 2.76ms/cm buffer solution
-                compECsolution = 2.76 * (1.0 + 0.0185 * (this->_temperature - 25.0)); //temperature compensation
+                Serial.print(F(">>>Buffer 1.413ms/cm<<<"));                            // recognize 1.413us/cm buffer solution
+                compECsolution = 1.413 * (1.0 + 0.0185 * (this->_temperature - 25.0)); // temperature compensation
                 Serial.print(F(">>>compECsolution: "));
                 Serial.print(compECsolution);
                 Serial.println(F("<<<"));
             }
             else if ((this->_rawEC > RAWEC_1288_LOW) && (this->_rawEC < RAWEC_1288_HIGH))
             {
-                Serial.print(F(">>>Buffer 12.88ms/cm<<<"));                            //recognize 12.88ms/cm buffer solution
-                compECsolution = 12.88 * (1.0 + 0.0185 * (this->_temperature - 25.0)); //temperature compensation
+                Serial.print(F(">>>Buffer 12.88ms/cm<<<"));                            // recognize 12.88ms/cm buffer solution
+                compECsolution = 12.88 * (1.0 + 0.0185 * (this->_temperature - 25.0)); // temperature compensation
                 Serial.print(F(">>>compECsolution: "));
                 Serial.print(compECsolution);
                 Serial.println(F("<<<"));
             }
             else
             {
+                Serial.print(_rawEC);
                 Serial.print(F(">>>Buffer Solution Error Try Again<<<   "));
                 ecCalibrationFinish = 0;
             }
@@ -236,51 +229,32 @@ void DFRobot_ESP_EC::ecCalibration(byte mode)
             Serial.print(F(" / 1000.0 / "));
             Serial.print(this->_voltage);
             Serial.println(F("<<<"));
-            KValueTemp = RES2 * ECREF * compECsolution / 1000.0 / this->_voltage; //calibrate the k value
+            KValueTemp = RES2 * ECREF * compECsolution / 1000.0 / this->_voltage; // calibrate the k value
             Serial.println();
             Serial.print(F(">>>KValueTemp: "));
             Serial.print(KValueTemp);
             Serial.println(F("<<<"));
-            if ((KValueTemp > 0.5) && (KValueTemp < 2.0))
+
+            Serial.println();
+            Serial.print(F(">>>Successful,K:"));
+            Serial.print(KValueTemp);
+            Serial.println(F(", Send EXITEC to Save and Exit<<<"));
+            if ((this->_rawEC > RAWEC_1413_LOW) && (this->_rawEC < RAWEC_1413_HIGH))
             {
-                Serial.println();
-                Serial.print(F(">>>Successful,K:"));
-                Serial.print(KValueTemp);
-                Serial.println(F(", Send EXITEC to Save and Exit<<<"));
-                if ((this->_rawEC > RAWEC_1413_LOW) && (this->_rawEC < RAWEC_1413_HIGH))
-                {
-                    this->_kvalueLow = KValueTemp;
-                    Serial.print(">>>kvalueHigh: ");
-                    Serial.print(this->_kvalueLow);
-                    Serial.println(F("<<<"));
-                }
-                else if ((this->_rawEC > RAWEC_276_LOW) && (this->_rawEC < RAWEC_276_HIGH))
-                {
-                    this->_kvalueHigh = KValueTemp;
-                    Serial.print(">>>kvalueHigh: ");
-                    Serial.print(this->_kvalueHigh);
-                    Serial.println(F("<<<"));
-                }
-                else if ((this->_rawEC > RAWEC_1288_LOW) && (this->_rawEC < RAWEC_1288_HIGH))
-                {
-                    this->_kvalueHigh = KValueTemp;
-                    Serial.print(">>>kvalueHigh: ");
-                    Serial.print(this->_kvalueHigh);
-                    Serial.println(F("<<<"));
-                }
-                ecCalibrationFinish = 1;
+                this->_kvalueLow = KValueTemp;
+                Serial.print(">>>kvalueLOW: ");
+                Serial.print(this->_kvalueLow);
+                Serial.println(F("<<<"));
             }
-            else
+
+            else if ((this->_rawEC > RAWEC_1288_LOW) && (this->_rawEC < RAWEC_1288_HIGH))
             {
-                Serial.println();
-                Serial.println(F(">>>KValueTemp out of range 0.5-2.0<<<"));
-                Serial.print(">>>KValueTemp: ");
-                Serial.print(KValueTemp, 4);
-                Serial.println("<<<");
-                Serial.println(F(">>>Failed,Try Again<<<"));
-                Serial.println();
-                ecCalibrationFinish = 0;
+                this->_kvalueHigh = KValueTemp;
+                Serial.print(">>>kvalueHigh: ");
+                Serial.print(this->_kvalueHigh);
+                Serial.println(F("<<<"));
             }
+            ecCalibrationFinish = 1;
         }
         break;
     case 3:
@@ -294,11 +268,7 @@ void DFRobot_ESP_EC::ecCalibration(byte mode)
                     EEPROM.writeFloat(this->_eepromStartAddress, this->_kvalueLow);
                     EEPROM.commit();
                 }
-                else if ((this->_rawEC > RAWEC_276_LOW) && (this->_rawEC < RAWEC_276_HIGH))
-                {
-                    EEPROM.writeFloat(this->_eepromStartAddress + (int)sizeof(float), this->_kvalueHigh);
-                    EEPROM.commit();
-                }
+
                 else if ((this->_rawEC > RAWEC_1288_LOW) && (this->_rawEC < RAWEC_1288_HIGH))
                 {
                     EEPROM.writeFloat(this->_eepromStartAddress + (int)sizeof(float), this->_kvalueHigh);
